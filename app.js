@@ -8,6 +8,8 @@ var cookie = require("cookie");
 var cookieParser = require("cookie-parser");
 var http = require("http").Server(app);
 var io = require("socket.io")(http);
+var RedisStream = require("redis-stream");
+var JSONStream = require("JSONStream");
 
 app.use(express.urlencoded());
 bluebird.promisifyAll(redis.RedisClient.prototype);
@@ -22,6 +24,8 @@ if (process.env.CHANNEL == "docker") {
   redisHost = "127.0.0.1";
   console.log("Docker environment not set. Using local redis store.");
 }
+
+var RedisStreamClient = new RedisStream(6379, redisHost);
 app.use(cookieParser(secret));
 var sessionStore = new RedisStore({
   host: redisHost,
@@ -95,6 +99,8 @@ client.on("connect", function() {
     });
   });
 
+  var stream = RedisStreamClient.stream("get");
+  stream.pipe(process.stdout);
   io.on("connection", async function(socket) {
     socket.emit("personalInfo", socket.sessionData);
     socket.on("message", function(data) {
@@ -102,7 +108,9 @@ client.on("connect", function() {
     });
   });
   sub.on("message", function(channel, message) {
+    client.set("chatlog", message + "\n");
     io.emit("message", "<" + channel + ">:" + message);
+    stream.write("chatlog");
   });
   sub.subscribe("completeChat");
 
