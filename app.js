@@ -65,6 +65,7 @@ client.on("connect", function() {
     res.send(`
     <h1>Hello, ${req.session.name}!</h1>
     <a href="/logout">Logout</a>
+    <a href="/chat">Chat</a>
   `);
   });
 
@@ -97,13 +98,13 @@ client.on("connect", function() {
   io.on("connection", async function(socket) {
     socket.emit("personalInfo", socket.sessionData);
     socket.on("message", function(data) {
-      pub.publish("mychannel", data);
+      pub.publish("completeChat", "<" + socket.sessionData.name + ">: " + data);
     });
   });
   sub.on("message", function(channel, message) {
     io.emit("message", "<" + channel + ">:" + message);
   });
-  sub.subscribe("mychannel");
+  sub.subscribe("completeChat");
 
   http.listen(8000, function() {});
 });

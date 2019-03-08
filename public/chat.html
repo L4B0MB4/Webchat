@@ -6,8 +6,28 @@
   });
   socket.on("message", function(data) {
     console.log(data);
+    var p = document.createElement("p");
+    p.textContent = data;
+    document.getElementById("chatBox").appendChild(p);
   });
-  window.setInterval(function() {
-    socket.emit("message", "hallo");
-  }, 1000);
+  function sendMessage() {
+    console.log(document.getElementById("chatInput").value);
+    socket.emit("message", document.getElementById("chatInput").value);
+    document.getElementById("chatInput").value = null;
+  }
+  function onKeyDown(e) {
+    if (e.keyCode === 13) {
+      sendMessage();
+    }
+  }
+</script>
+
+<body>
+  <input type="text" id="chatInput" />
+  <button type="submit" onClick="sendMessage()">Send Message</button>
+  <div id="chatBox" style="width:300px;height:500px;overflow-y:auto"></div>
+</body>
+
+<script>
+  document.getElementById("chatInput").addEventListener("keydown", onKeyDown);
 </script>
