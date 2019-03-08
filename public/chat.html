@@ -1,0 +1,8 @@
+<script src="/socketioclient"></script>
+<script>
+  var socket = io();
+  socket.on("personalInfo", function(data) {
+    console.log(data);
+  });
+  console.log(socket);
+</script>
