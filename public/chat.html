@@ -4,5 +4,10 @@
   socket.on("personalInfo", function(data) {
     console.log(data);
   });
-  console.log(socket);
+  socket.on("message", function(data) {
+    console.log(data);
+  });
+  window.setInterval(function() {
+    socket.emit("message", "hallo");
+  }, 1000);
 </script>
