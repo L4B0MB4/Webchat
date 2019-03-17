@@ -11,6 +11,10 @@ var io = require("socket.io")(http);
 var RedisStream = require("redis-stream");
 var JSONStream = require("JSONStream");
 
+var fs = require("fs"),
+  path = require("path"),
+  filePath = path.join(__dirname, "/public/index.html");
+
 app.use(express.urlencoded());
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
@@ -66,11 +70,14 @@ client.on("connect", function() {
   app.use(authentication);
 
   app.get("/", function(req, res) {
-    res.send(`
-    <h1>Hello, ${req.session.name}!</h1>
-    <a href="/logout">Logout</a>
-    <a href="/chat">Chat</a>
-  `);
+    fs.readFile(filePath, { encoding: "utf-8" }, function(err, data) {
+      if (!err) {
+        data = data.replace("$$USERNAME$$", req.session.name);
+        return res.send(data);
+      } else {
+        console.log(err);
+      }
+    });
   });
 
   app.get("/logout", function(req, res) {
@@ -109,7 +116,7 @@ client.on("connect", function() {
   });
   sub.on("message", function(channel, message) {
     client.set("chatlog", message + "\n");
-    io.emit("message", "<" + channel + ">:" + message);
+    io.emit("message", message);
     stream.write("chatlog");
   });
   sub.subscribe("completeChat");
